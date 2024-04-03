@@ -1,17 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
-  
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GPS Tracker</title>
+  <title>GPS Трекер</title>
   <script src="ol.js"></script>
 </head>
 <body>
   <div id="map" style="width: 100%; height: 400px;"></div>
 
+  <div id="info" style="position: absolute; top: 10px; right: 10px; background-color: rgba(255, 255, 255, 0.7); padding: 10px;">
+    <p>Широта: <span id="latitude"></span></p>
+    <p>Довгота: <span id="longitude"></span></p>
+    <p>Точність: <span id="accuracy"></span> метрів</p>
+    <p>Висота: <span id="altitude"></span> метрів</p>
+    <p>Точність висоти: <span id="altitudeAccuracy"></span> метрів</p>
+    <p>Кут: <span id="heading"></span> градусів</p>
+    <p>Швидкість: <span id="speed"></span> м/с</p>
+    <p>Час: <span id="timestamp"></span></p>
+  </div>
+
   <script>
-    // Функция для инициализации карты
+    // Функція для ініціалізації карти
     function initMap() {
       const map = new ol.Map({
         target: 'map',
@@ -26,31 +36,39 @@
         })
       });
 
-      // Функция для обновления маркера с координатами
+      // Функція для оновлення маркера з координатами
       function updateMarker(coordinates) {
         map.getView().setCenter(ol.proj.fromLonLat(coordinates));
         marker.setGeometry(new ol.geom.Point(ol.proj.fromLonLat(coordinates)));
       }
 
-      // Получение координат GPS
+      // Отримання координат GPS
       function getGPSLocation() {
         navigator.geolocation.getCurrentPosition(
-          // Успешное получение координат
+          // Успішне отримання координат
           function(position) {
-            const coordinates = [position.coords.longitude, position.coords.latitude];
-            updateMarker(coordinates);
+            const { latitude, longitude, accuracy, altitude, altitudeAccuracy, heading, speed, timestamp } = position.coords;
+            document.getElementById('latitude').textContent = latitude;
+            document.getElementById('longitude').textContent = longitude;
+            document.getElementById('accuracy').textContent = accuracy;
+            document.getElementById('altitude').textContent = altitude ? altitude : 'Недоступно';
+            document.getElementById('altitudeAccuracy').textContent = altitudeAccuracy ? altitudeAccuracy : 'Недоступно';
+            document.getElementById('heading').textContent = heading ? heading : 'Недоступно';
+            document.getElementById('speed').textContent = speed ? speed : 'Недоступно';
+            document.getElementById('timestamp').textContent = new Date(timestamp).toLocaleString();
+            updateMarker([longitude, latitude]);
           },
-          // Ошибка при получении координат
+          // Помилка при отриманні координат
           function(error) {
-            console.error('Error getting GPS coordinates:', error);
+            console.error('Помилка отримання GPS координат:', error);
           }
         );
       }
 
-      // Обновление координат каждые 2 секунды
+      // Оновлення координат кожні 2 секунди
       setInterval(getGPSLocation, 2000);
 
-      // Создание маркера
+      // Створення маркера
       const marker = new ol.Feature();
       marker.setStyle(new ol.style.Style({
         image: new ol.style.Circle({
@@ -60,7 +78,7 @@
         })
       }));
 
-      // Добавление маркера на карту
+      // Додавання маркера на карту
       const vectorLayer = new ol.layer.Vector({
         source: new ol.source.Vector({
           features: [marker]
@@ -69,7 +87,7 @@
       map.addLayer(vectorLayer);
     }
 
-    // Загрузка карты при загрузке страницы
+    // Завантаження карти при завантаженні сторінки
     document.addEventListener('DOMContentLoaded', initMap);
   </script>
 </body>
